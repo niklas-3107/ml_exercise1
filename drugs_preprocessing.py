@@ -1,4 +1,5 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 #Import CSV
 #colnames, as they are not specified in DS
 pd.options.display.max_columns = 50
@@ -8,7 +9,7 @@ colnames = ["id", "age", "gender", "education", "country", "ethnicity",
            "alcohol", "amphet", "amyl", "benzos", "caff", "cannabis",
            "choc", "coke", "crack", "ecstasy", "heroin", "ketamine",
            "legalh", "lsd", "meth", "mushrooms", "nicotine", "semer", "vsa"]
-drugs = pd.read_csv('drug_consumption.csv', header = None, names = colnames, index_col = False)
+drugs = pd.read_csv('data/drug_consumption.csv', header = None, names = colnames, index_col = False)
 drugs.head()
 
 # preprocessing (reverse transformation)
@@ -42,7 +43,7 @@ drugs.head()
 #intense to do that manually as well
 label_list = []
 #extract informatioin from txt file created from web source
-with open("drug_data-description.txt", "r") as file:
+with open("data/drug_data-description.txt", "r") as file:
     data = file.readlines()
     for line in data:
         ### if line start with digit -> new variable section begins
@@ -75,43 +76,20 @@ for i in range(len(label_list)):
     drugs.iloc[:,i+6] = round(drugs.iloc[:, i+6], 5)
     drugs.iloc[:,i+6] = drugs.iloc[:,i+6].replace(label_list[i].keys(), label_list[i].values())
 
-
 #change data types
 for i in range(1, 6):
     drugs[colnames[i]] = drugs[colnames[i]].astype("category")
 for i in range(6, 11):
     drugs[colnames[i]] = drugs[colnames[i]].astype("int32")
+    
+#########takes some time
+#### removing "CL*"    
+for i in range(13, len(colnames)):
+    for j in range(0, len(drugs[colnames[i]])):
+        drugs.iloc[j,i] = int(drugs.iloc[j,i][-1])
+drugs.head()
+
 for i in range(13, len(colnames)):
     drugs[colnames[i]] = drugs[colnames[i]].astype("category")
 print(drugs.info())
 print(drugs.head())
-
-drugs.isna().sum() # The number of missing values per Attribute (column)
-
-drugs.shape # Check dimensions
-
-drugs.iloc[:,1:len(drugs)].describe() #without id
-
-categorical = drugs.dtypes[drugs.dtypes == "category"].index #gives list of attributes that are categorical
-drugs[categorical].describe()
-
-#list of proportional frequency tables
-prop_tables = []
-for variable in categorical:
-    tab = pd.crosstab(drugs[variable], columns="count")
-    rel_tab = tab/tab.sum()
-    prop_tables.append(rel_tab)
-
-print(categorical)
-
-for i in [0, 2, 5, 14]:
-    print(prop_tables[i])
-    print()
-    
-print(colnames)
-prop_tables[0].plot(kind="bar",title="Relative frequency of age")
-prop_tables[2].plot(kind="bar", title="Relative frequency of eduction")
-
-#drugs.extraversion.plot(kind="hist", title="Distribution of extraversion", bins = 13)
-drugs.extraversion.plot(kind="box", title="Distribution of extraversion")
-prop_tables[14].plot(kind="bar", title="Relative frequency of ecstacy use")
